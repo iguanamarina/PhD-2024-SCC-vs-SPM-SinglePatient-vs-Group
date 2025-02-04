@@ -29,8 +29,7 @@
 ####
 
 #* Working directory ----
-# setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM")
-setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM")
+setwd("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group")
 
 #* Options ----
 options(scipen = 6, digits = 4) # View outputs in non-scientific notation
@@ -138,7 +137,7 @@ VT = Triangulation::TriMesh(contourCoordinates[[1]], n = 8)
 
 #* Save these contour coordinates ----
 # Define the directory path
-directoryPath <- paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+directoryPath <- paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                         as.character(param.z))
 
 # Check if the directory exists and create it if it does not
@@ -165,7 +164,7 @@ save(VT, file = paste0("contour", as.character(param.z), ".RData"))
 #* Create CN DataBase ----
 
 # Set the working directory for image files
-setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/PETimg_masked for simulations")
+setwd("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/PETimg_masked for simulations")
 
 # Create the database using a specific file pattern 
 pattern <- "^masked_swwwC\\d+_tripleNormEsp_w00_rrec_OSEM3D_32_it1.nii"
@@ -181,11 +180,11 @@ database_CN <- neuroSCC::databaseCreator(pattern)
 # SCC_CN <- neuroSCC::matrixCreator(database_CN, pattern, param.z, xy)
 
 # Now it should be in matrix format with every row representing a Control file 
-# setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", as.character(param.z)))
+# setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", as.character(param.z)))
 # save(SCC_CN, file = "SCC_CN.RData") # SCC matrix for Controls
 
 # Load results to save time:
-load("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z35/SCC_CN.RData")
+load("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/SCC_CN.RData")
 
 
 ####
@@ -193,7 +192,7 @@ load("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z35/SCC_CN.RData")
 ####
 
 # Set initial working directory
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/PETimg_masked for simulations"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/PETimg_masked for simulations"
 setwd(base_dir)
 
 # Get the list of files matching the general pattern and extract maximum value
@@ -275,7 +274,7 @@ for (i in 1:length(region)) {
 ####
 
 # Based on the results from section "2 - Get coordinates in pckg Triangulation format"
-setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", as.character(param.z)))
+setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", as.character(param.z)))
 
 # Load previously calculated contour as VT 
 load(paste0("contour", as.character(param.z), ".RData"))
@@ -298,7 +297,7 @@ Tr.band = as.matrix(Brain.Tr)
 ####
 
 # Set initial working directory
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group"
 param_z_dir <- paste0(base_dir, "/Results/z", as.character(param.z))
 result_dir <- paste0(param_z_dir, "/results")
 
@@ -362,7 +361,7 @@ for (i in 1:length(region)) {
 #* Theoretical ROIs ----
 
 # Define the base directory (can be skipped if you ran the whole script)
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group"
 
 # Define the regions to be processed (same as previous)
 regions <- c("w32", "w79", "w214", "w271", "w413", "wroiAD")
@@ -377,7 +376,7 @@ neuroSCC::processROIs(base_dir, regions, numbers)
 library(tidyverse)
 
 # Define the table ROI directory 
-roi_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/roisNormalizadas/tables"
+roi_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/roisNormalizadas/tables"
 
 # Load all the ROI tables
 ROI_data <- lapply(seq_along(regions), function(i) {
@@ -405,7 +404,7 @@ T_points <- unlist(T_points, recursive = FALSE)
 # Remove unwanted part from the names of the list elements
 names(T_points) <- sub("\\.newcol$", "", names(T_points))
 
-# setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/roisNormalizadas/tables")
+# setwd("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/roisNormalizadas/tables")
 # saveRDS(T_points, file = "T_points.RDS")
 
 # Clean up
@@ -447,7 +446,7 @@ SCC_vs_SPM <- data.frame(
 )
 
 # Load the template and automatically detect the limits of x and y
-setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM")
+setwd("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group")
 template <- neuroSCC::neuroCleaner("Auxiliary Files/new_mask")
 
 # Keep the relevant slice
@@ -475,7 +474,7 @@ for (k in 1:length(roi)) {
   H_points <- list()
   
   # Set working directory to results folder
-  setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+  setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                as.character(param.z), "/results"))
   
   # Load SCC results for each region
@@ -554,13 +553,13 @@ for (k in 1:length(roi)) {
                       npv = sd(SCC_sens_esp$npv, na.rm = TRUE))
     SCC_sens_esp <- rbind(SCC_sens_esp, means, sds)
     
-    setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+    setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                  as.character(param.z), "/results", "/ROI", roi[k]))
     readr::write_csv(SCC_sens_esp, paste0("sens_esp_SCC_", regions[i], "_", roi[k], ".csv"), 
                      na = "NA", append = FALSE)
   }
   
-  setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+  setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                as.character(param.z), "/results", "/ROI", roi[k]))
   
   sens_esp_SCC_w32 <- readr::read_csv(paste0("sens_esp_SCC_w32_", roi[k], ".csv"), 
@@ -578,7 +577,7 @@ for (k in 1:length(roi)) {
   
   # Sensitivity and Specificity for SPM
   for (i in 1:length(regions)) {
-    setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+    setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                  as.numeric(param.z), "/SPM", "/ROI", i, "_", regions[i], "_0", roi[k]))
     binary <- neuroSCC::neuroCleaner("binary.nii")
     H_points_SPM <- binary[binary$z == as.numeric(param.z) & binary$pet == 1, 2:3]
@@ -641,14 +640,14 @@ for (k in 1:length(roi)) {
                       npv = sd(SPM_sens_esp$npv, na.rm = TRUE))
     SPM_sens_esp <- rbind(SPM_sens_esp, means, sds)
     
-    setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+    setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                  as.character(param.z), "/results", "/ROI", roi[k]))
     
     readr::write_csv(SPM_sens_esp, paste0("sens_esp_SPM_", regions[i], "_", roi[k], ".csv"), 
                      na = "NA", append = FALSE)
   }
   
-  setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+  setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                as.character(param.z), "/results", "/ROI", roi[k]))
   
   sens_esp_SPM_w32 <- readr::read_csv(paste0("sens_esp_SPM_w32_", roi[k], ".csv"), 
@@ -722,17 +721,17 @@ for (k in 1:length(roi)) {
 # View(SCC_vs_SPM)
 # View(SCC_vs_SPM_complete)
 
-# setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", as.numeric(param.z), "/results"))
+# setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", as.numeric(param.z), "/results"))
 # saveRDS(SCC_vs_SPM, file = "SCC_vs_SPM.RDS")
 # saveRDS(SCC_vs_SPM_complete, file = "SCC_vs_SPM_complete.RDS")
 
 #* Export as LaTeX table code ----
 
-setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Article")
+# setwd("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Article")
 
 library(dplyr)
 
-SCC_vs_SPM <- readRDS(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+SCC_vs_SPM <- readRDS(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                              as.numeric(param.z), "/results/SCC_vs_SPM.RDS"))
 
 SCC_vs_SPM <- SCC_vs_SPM %>% dplyr::arrange(method)
@@ -765,9 +764,9 @@ print(xtable(latex, type = "latex"),
 ####  
 
 # Load data if not already in environment
-referencia <- readRDS(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+referencia <- readRDS(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                              as.numeric(param.z), "/results/SCC_vs_SPM.RDS"))
-table <- readRDS(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+table <- readRDS(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
                         as.numeric(param.z), "/results/SCC_vs_SPM_complete.RDS"))
 
 # Load necessary packages
@@ -787,7 +786,7 @@ table$Roi <- as.character(as.numeric(table$Roi) * 10)
 table2 <- rbind(table[table$method == "SCC", ], table[table$method == "SPM", ])
 
 # Set working directory for saving figures
-setwd(paste0("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z", 
+setwd(paste0("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z", 
              as.numeric(param.z), "/Figures")) 
 
 #* Sensitivity and Specificity for wroiAD ----
@@ -1010,14 +1009,14 @@ ggsave(filename = paste0("ppv_npv_ALL_", as.numeric(param.z), ".png"),
 # Of the things we need, we already have
 
 # The True Points
-T_points <- readRDS("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/roisNormalizadas/tables/T_points.RDS")
+T_points <- readRDS("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/roisNormalizadas/tables/T_points.RDS")
 
 # The SCC_ (matrix of controls)
-load("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z35/SCC_CN.RData")
+load("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/SCC_CN.RData")
 
 # And the triangulations, run the chunk if not loaded
 
-load("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z35/contour35.RData")
+load("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/contour35.RData")
 
 Brain.V <- VT[[1]]
 Brain.Tr <- VT[[2]]
@@ -1030,7 +1029,7 @@ Tr.band = as.matrix(Brain.Tr)
 # So we only need the SCC of just one patient
 
 # Set initial working directory
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/PETimg_masked for simulations"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/PETimg_masked for simulations"
 setwd(base_dir)
 
 #* Clone Factory ----  
@@ -1063,7 +1062,7 @@ numClonesValues <- c(2, 5, 10)
 factorLambdaValues <- c(0.001, 0.01, 0.1)
 
 # Change the working directory to export the results
-setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z35/1vsGroup")
+setwd("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/1vsGroup")
 
 #* Parameters for SCC computation ----
 d.est <- 5  # degree of spline for mean function
@@ -1126,7 +1125,7 @@ for (numClones in numClonesValues) {
 # #* Preliminary Visualizations ----
 # library(fields)
 # 
-# # load("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z35/1vsGroup/SCC_1vsG_35.RData")
+# # load("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/1vsGroup/SCC_1vsG_35.RData")
 # 
 # plot(SCC_1vsG,
 #   # breaks=c(0,2),
@@ -1178,10 +1177,10 @@ for (numClones in numClonesValues) {
 # Theoretical ROIs
 
 # The True Points
-T_points <- readRDS("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/roisNormalizadas/tables/T_points.RDS")
+T_points <- readRDS("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/roisNormalizadas/tables/T_points.RDS")
 
 # Load the template and automatically detect the limits of x and y
-setwd("~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM")
+setwd("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group")
 template <- neuroSCC::neuroCleaner("Auxiliary Files/new_mask")
 
 # Keep the relevant slice
@@ -1206,7 +1205,7 @@ numClonesValues <- c(2, 5, 10)
 factorLambdaValues <- c(0.001, 0.01, 0.1)
 
 # Set working directory
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group"
 setwd(paste0(base_dir, "/Results/z", as.character(param.z), "/1vsGroup"))
 
 # Initialize results dataframe
@@ -1300,7 +1299,7 @@ SPM_results <- data.frame(method = "SPM", sens = sensitivity_SPM, esp = specific
 # Assuming that SCC_CN and triangulation objects are loaded from previous sections.
 
 # Set initial working directory
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/PETimg_masked for simulations"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/PETimg_masked for simulations"
 setwd(base_dir)
 
 # Get list of files
@@ -1317,7 +1316,7 @@ lambda <- 10^{seq(-6, 3, 0.5)}
 alpha.grid <- c(0.10, 0.05, 0.01)
 
 # Set output directory
-output_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM/Results/z35/1vsGroup/SCC"
+output_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/1vsGroup/SCC"
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
 # Main loop
@@ -1431,7 +1430,7 @@ if(!exists("T_points") || !exists("total_coords")) {
 }
 
 # Configurar directorios
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group"
 scc_results_dir <- file.path(base_dir, "Results/z35/1vsGroup/SCC")
 eval_results_dir <- file.path(base_dir, "Results/z35/1vsGroup/Evaluation")
 dir.create(eval_results_dir, showWarnings = FALSE, recursive = TRUE)
@@ -1607,7 +1606,7 @@ if(!exists("T_points") || !exists("total_coords")) {
 }
 
 # Configurar directorios
-base_dir <- "~/GitHub/PhD-2023-Neuroimage-article-SCC-vs-SPM"
+base_dir <- "~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group"
 spm_dir <- file.path(base_dir, "Results/z35/1vsGroup/SPM")
 eval_results_dir <- file.path(base_dir, "Results/z35/1vsGroup/Evaluation")
 dir.create(eval_results_dir, showWarnings = FALSE, recursive = TRUE)
