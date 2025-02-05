@@ -1758,6 +1758,43 @@ summary_table_spm <- summary_stats_spm %>%
   mutate(across(where(is.numeric), ~round(., 2)))
 
 
+#* Métricas Resumen ----
+
+# Para SCC
+data_combined %>%
+  filter(method == "SCC") %>%
+  group_by(region, hypo_level) %>%
+  summarize(
+    n = n(),
+    mean_sens = mean(sensitivity, na.rm = TRUE),
+    sd_sens = sd(sensitivity, na.rm = TRUE),
+    mean_spec = mean(specificity, na.rm = TRUE),
+    sd_spec = sd(specificity, na.rm = TRUE),
+    mean_ppv = mean(ppv, na.rm = TRUE),
+    sd_ppv = sd(ppv, na.rm = TRUE),
+    mean_npv = mean(npv, na.rm = TRUE),
+    sd_npv = sd(npv, na.rm = TRUE)
+  ) %>%
+  arrange(region, hypo_level)
+
+# Para SPM (comparación)
+data_combined %>%
+  filter(method == "SPM") %>%
+  group_by(region, hypo_level) %>%
+  summarize(
+    n = n(),
+    mean_sens = mean(sensitivity, na.rm = TRUE),
+    sd_sens = sd(sensitivity, na.rm = TRUE),
+    mean_spec = mean(specificity, na.rm = TRUE),
+    sd_spec = sd(specificity, na.rm = TRUE),
+    mean_ppv = mean(ppv, na.rm = TRUE),
+    sd_ppv = sd(ppv, na.rm = TRUE),
+    mean_npv = mean(npv, na.rm = TRUE),
+    sd_npv = sd(npv, na.rm = TRUE)
+  ) %>%
+  arrange(region, hypo_level)
+
+
 #* 12) VISUALIZATIONS---- 
 
 library(ggplot2)
@@ -2061,3 +2098,81 @@ ggsave("npv_plot.png", p4, width = 12, height = 8, dpi = 300)
 # También podrías usar grid.arrange para verlos todos juntos:
 # library(gridExtra)
 # grid.arrange(p1, p2, p3, p4, ncol = 2)
+
+
+#* Segunda Ronda de Visualizaciones ----
+
+# BoxPlot definitivo
+ggplot(data_combined, 
+       aes(x = hypo_level, y = sensitivity, fill = method)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.7) +
+  geom_point(aes(color = method), 
+             position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75),
+             alpha = 0.7, size = 1) +  # Reducido tamaño y ajustada transparencia
+  scale_fill_brewer(palette = "Set1") +
+  scale_color_brewer(palette = "Set1") +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  scale_x_discrete(labels = c("10", "40", "80")) +
+  facet_wrap(~region, ncol = 2) +
+  labs(title = "Sensitivity by Region",
+       x = "Hypoactivity Level (%)",
+       y = "Sensitivity (%)") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(),
+        panel.spacing = unit(2, "cm"))
+
+
+# Función mejorada para crear los gráficos
+create_metric_plot <- function(data, metric, ytitle, ymin = 0, ymax = 100) {
+  ggplot(data, aes(x = hypo_level, y = .data[[metric]], fill = method)) +
+    geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.7) +
+    geom_point(aes(color = method), 
+               position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75),
+               alpha = 0.7, size = 1) +
+    scale_fill_brewer(palette = "Set1") +
+    scale_color_brewer(palette = "Set1") +
+    scale_y_continuous(limits = c(ymin, ymax), 
+                       breaks = seq(ymin, ymax, (ymax-ymin)/5)) +
+    scale_x_discrete(labels = c("10", "40", "80")) +
+    facet_wrap(~region, ncol = 2) +
+    labs(title = paste(ytitle, "by Region"),
+         x = "Hypoactivity Level (%)",
+         y = paste(ytitle, "(%)")) +
+    theme_minimal() +
+    theme(legend.position = "bottom",
+          panel.grid.minor = element_blank(),
+          panel.spacing = unit(2, "cm"))
+}
+
+# Crear los gráficos con rangos específicos para cada métrica
+p1 <- create_metric_plot(data_combined, "sensitivity", "Sensitivity", 0, 100)
+p2 <- create_metric_plot(data_combined, "specificity", "Specificity", 40, 100)
+p3 <- create_metric_plot(data_combined, "ppv", "Positive Predictive Value", 0, 40)
+p4 <- create_metric_plot(data_combined, "npv", "Negative Predictive Value", 80, 100)
+
+# Función para exportar gráficos con parámetros optimizados
+export_plot <- function(plot, filename, width = 12, height = 8, dpi = 600) {
+  # PNG version
+  ggsave(paste0(filename, ".png"), 
+         plot = plot,
+         width = width, 
+         height = height,
+         dpi = dpi,
+         bg = "white")
+  
+  # TIFF version para publicación
+  ggsave(paste0(filename, ".tiff"), 
+         plot = plot,
+         width = width, 
+         height = height,
+         dpi = dpi,
+         bg = "white",
+         compression = "lzw")
+}
+
+# Exportar todos los gráficos
+export_plot(p1, "sensitivity_plot")
+export_plot(p2, "specificity_plot")
+export_plot(p3, "ppv_plot")
+export_plot(p4, "npv_plot")
