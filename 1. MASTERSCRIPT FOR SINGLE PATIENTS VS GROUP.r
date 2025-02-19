@@ -1461,11 +1461,11 @@ calculate_metrics <- function(H_points, T_points, total_coords) {
   hypo_neg <- dplyr::anti_join(total_coords, H_points, by = "newcol")
   anti_inters <- dplyr::inner_join(true_neg, hypo_neg, by = "newcol")
   
-  specificity <- nrow(anti_inters) / nrow(true_neg) * 110
+  specificity <- nrow(anti_inters) / nrow(true_neg) * 100
   
   FalsePositive <- dplyr::inner_join(H_points, true_neg, by = "newcol")
   ppv <- if(nrow(inters) + nrow(FalsePositive) > 0) {
-    (nrow(inters) / (nrow(inters) + nrow(FalsePositive))) * 110
+    (nrow(inters) / (nrow(inters) + nrow(FalsePositive))) * 100
   } else {
     0
   }
@@ -2100,56 +2100,41 @@ ggsave("npv_plot.png", p4, width = 12, height = 8, dpi = 300)
 # grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 
-#* Segunda Ronda de Visualizaciones ----
 
-# BoxPlot definitivo
-ggplot(data_combined, 
-       aes(x = hypo_level, y = sensitivity, fill = method)) +
-  geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.7) +
-  geom_point(aes(color = method), 
-             position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75),
-             alpha = 0.7, size = 1) +  # Reducido tamaño y ajustada transparencia
-  scale_fill_brewer(palette = "Set1") +
-  scale_color_brewer(palette = "Set1") +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
-  scale_x_discrete(labels = c("10", "40", "80")) +
-  facet_wrap(~region, ncol = 2) +
-  labs(title = "Sensitivity by Region",
-       x = "Hypoactivity Level (%)",
-       y = "Sensitivity (%)") +
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        panel.grid.minor = element_blank(),
-        panel.spacing = unit(2, "cm"))
+#* Primera Ronda de Visualizaciones (Grupos) ----
 
+# Preparar datos
+SCC_vs_SPM_complete <- SCC_vs_SPM_complete %>%
+  filter(region %in% c("w32", "w214", "w271", "wroiAD")) %>%
+  filter(Roi == "1" | Roi == "4" | Roi == "8")
 
-# Función mejorada para crear los gráficos
 create_metric_plot <- function(data, metric, ytitle, ymin = 0, ymax = 100) {
-  ggplot(data, aes(x = hypo_level, y = .data[[metric]], fill = method)) +
+  ggplot(data, aes(x = Roi, y = .data[[metric]], fill = method)) +
     geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.7) +
     geom_point(aes(color = method), 
                position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75),
-               alpha = 0.7, size = 1) +
+               alpha = 0.7, size = 0.8) +    # Puntos ligeramente más pequeños
     scale_fill_brewer(palette = "Set1") +
     scale_color_brewer(palette = "Set1") +
     scale_y_continuous(limits = c(ymin, ymax), 
                        breaks = seq(ymin, ymax, (ymax-ymin)/5)) +
     scale_x_discrete(labels = c("10", "40", "80")) +
     facet_wrap(~region, ncol = 2) +
-    labs(title = paste(ytitle, "by Region"),
-         x = "Hypoactivity Level (%)",
+    labs(x = "Hypoactivity Level (%)",
          y = paste(ytitle, "(%)")) +
     theme_minimal() +
-    theme(legend.position = "bottom",
-          panel.grid.minor = element_blank(),
-          panel.spacing = unit(2, "cm"))
+    theme(
+      text = element_text(size = 14),          # Tamaño base de fuente aumentado
+      axis.text = element_text(size = 12),     # Texto de ejes más grande
+      axis.title = element_text(size = 14),    # Títulos de ejes más grandes
+      legend.text = element_text(size = 12),   # Texto de leyenda más grande
+      legend.title = element_text(size = 14),  # Título de leyenda más grande
+      legend.position = "bottom",
+      panel.grid.minor = element_blank(),
+      panel.spacing = unit(1, "cm"),           # Espacio entre paneles reducido
+      plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")  # Márgenes ajustados
+    )
 }
-
-# Crear los gráficos con rangos específicos para cada métrica
-p1 <- create_metric_plot(data_combined, "sensitivity", "Sensitivity", 0, 100)
-p2 <- create_metric_plot(data_combined, "specificity", "Specificity", 40, 100)
-p3 <- create_metric_plot(data_combined, "ppv", "Positive Predictive Value", 0, 40)
-p4 <- create_metric_plot(data_combined, "npv", "Negative Predictive Value", 80, 100)
 
 # Función para exportar gráficos con parámetros optimizados
 export_plot <- function(plot, filename, width = 12, height = 8, dpi = 600) {
@@ -2170,6 +2155,74 @@ export_plot <- function(plot, filename, width = 12, height = 8, dpi = 600) {
          bg = "white",
          compression = "lzw")
 }
+
+# Crear los gráficos con rangos específicos para cada métrica
+p1 <- create_metric_plot(SCC_vs_SPM_complete, "sens", "Sensitivity", 0, 100)
+p2 <- create_metric_plot(SCC_vs_SPM_complete, "esp", "Specificity", 40, 100)
+p3 <- create_metric_plot(SCC_vs_SPM_complete, "ppv", "Positive Predictive Value", 0, 40)
+p4 <- create_metric_plot(SCC_vs_SPM_complete, "npv", "Negative Predictive Value", 80, 100)
+
+# Exportar gráficos
+export_plot(p1, "sensitivity_plot_group")
+export_plot(p2, "specificity_plot_group")
+export_plot(p3, "ppv_plot_group")
+export_plot(p4, "npv_plot_group")
+
+#* Segunda Ronda de Visualizaciones (1vsGroup) ----
+
+# BoxPlot definitivo
+ggplot(data_combined, 
+       aes(x = hypo_level, y = sensitivity, fill = method)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.7) +
+  geom_point(aes(color = method), 
+             position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75),
+             alpha = 0.7, size = 1) +  # Reducido tamaño y ajustada transparencia
+  scale_fill_brewer(palette = "Set1") +
+  scale_color_brewer(palette = "Set1") +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  scale_x_discrete(labels = c("10", "40", "80")) +
+  facet_wrap(~region, ncol = 2) +
+  labs(x = "Hypoactivity Level (%)",
+       y = "Sensitivity (%)") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(),
+        panel.spacing = unit(2, "cm"))
+
+# Función mejorada para crear los gráficos
+create_metric_plot <- function(data, metric, ytitle, ymin = 0, ymax = 100) {
+  ggplot(data, aes(x = hypo_level, y = .data[[metric]], fill = method)) +
+    geom_boxplot(alpha = 0.7, outlier.shape = NA, width = 0.7) +
+    geom_point(aes(color = method), 
+               position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75),
+               alpha = 0.7, size = 0.8) +
+    scale_fill_brewer(palette = "Set1") +
+    scale_color_brewer(palette = "Set1") +
+    scale_y_continuous(limits = c(ymin, ymax), 
+                       breaks = seq(ymin, ymax, (ymax-ymin)/5)) +
+    scale_x_discrete(labels = c("10", "40", "80")) +
+    facet_wrap(~region, ncol = 2) +
+    labs(x = "Hypoactivity Level (%)",
+         y = paste(ytitle, "(%)")) +
+    theme_minimal() +
+    theme(
+      text = element_text(size = 14),
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 14),
+      legend.text = element_text(size = 12),
+      legend.title = element_text(size = 14),
+      legend.position = "bottom",
+      panel.grid.minor = element_blank(),
+      panel.spacing = unit(1, "cm"),
+      plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
+    )
+}
+
+# Crear los gráficos con rangos específicos para cada métrica
+p1 <- create_metric_plot(data_combined, "sensitivity", "Sensitivity", 0, 100)
+p2 <- create_metric_plot(data_combined, "specificity", "Specificity", 40, 100)
+p3 <- create_metric_plot(data_combined, "ppv", "Positive Predictive Value", 0, 40)
+p4 <- create_metric_plot(data_combined, "npv", "Negative Predictive Value", 80, 100)
 
 # Exportar todos los gráficos
 export_plot(p1, "sensitivity_plot")
