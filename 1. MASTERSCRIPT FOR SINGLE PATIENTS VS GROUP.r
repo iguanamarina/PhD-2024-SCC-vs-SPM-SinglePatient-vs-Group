@@ -129,7 +129,7 @@ if (length(contourCoordinates) > 1) {
 
 #* Get coordinates in pckg Triangulation format: ----
 
-VT = Triangulation::TriMesh(contourCoordinates[[1]], n = 8) 
+VT = Triangulation::TriMesh(contourCoordinates[[1]], n = 15) 
 
 # n = Triangulation degree of fineness (8 is recommended)
 # However, higher values can be used as Arias-López et al. (2021) suggests 
@@ -1795,7 +1795,7 @@ data_combined %>%
   arrange(region, hypo_level)
 
 
-#* 12) VISUALIZATIONS---- 
+# 12) VISUALIZATIONS---- 
 
 library(ggplot2)
 library(dplyr)
@@ -2104,7 +2104,7 @@ ggsave("npv_plot.png", p4, width = 12, height = 8, dpi = 300)
 #* Primera Ronda de Visualizaciones (Grupos) ----
 
 # Preparar datos
-SCC_vs_SPM_complete <- SCC_vs_SPM_complete %>%
+SCC_vs_SPM_complete <- table %>%
   filter(region %in% c("w32", "w214", "w271", "wroiAD")) %>%
   filter(Roi == "1" | Roi == "4" | Roi == "8")
 
@@ -2156,6 +2156,16 @@ export_plot <- function(plot, filename, width = 12, height = 8, dpi = 600) {
          compression = "lzw")
 }
 
+SCC_vs_SPM_complete$region <- factor(SCC_vs_SPM_complete$region, 
+                               levels = c("w32", "w214", "w271", "wroiAD"))
+
+SCC_vs_SPM_complete$region <- recode_factor(SCC_vs_SPM_complete$region, 
+                                            "w32" = "ROI 1", 
+                                            "w214" = "ROI 2", 
+                                            "w271" = "ROI 3", 
+                                            "wroiAD" = "ROI 4")
+
+
 # Crear los gráficos con rangos específicos para cada métrica
 p1 <- create_metric_plot(SCC_vs_SPM_complete, "sens", "Sensitivity", 0, 100)
 p2 <- create_metric_plot(SCC_vs_SPM_complete, "esp", "Specificity", 40, 100)
@@ -2189,6 +2199,7 @@ ggplot(data_combined,
         panel.grid.minor = element_blank(),
         panel.spacing = unit(2, "cm"))
 
+
 # Función mejorada para crear los gráficos
 create_metric_plot <- function(data, metric, ytitle, ymin = 0, ymax = 100) {
   ggplot(data, aes(x = hypo_level, y = .data[[metric]], fill = method)) +
@@ -2217,6 +2228,16 @@ create_metric_plot <- function(data, metric, ytitle, ymin = 0, ymax = 100) {
       plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
     )
 }
+
+data_combined$region <- factor(data_combined$region, 
+                               levels = c("w32", "w214", "w271", "roiAD"))
+
+
+data_combined$region <- recode_factor(data_combined$region, 
+                                            "w32" = "ROI 1", 
+                                            "w214" = "ROI 2", 
+                                            "w271" = "ROI 3", 
+                                            "roiAD" = "ROI 4")
 
 # Crear los gráficos con rangos específicos para cada métrica
 p1 <- create_metric_plot(data_combined, "sensitivity", "Sensitivity", 0, 100)
