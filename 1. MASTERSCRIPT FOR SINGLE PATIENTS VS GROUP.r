@@ -1121,51 +1121,6 @@ for (numClones in numClonesValues) {
     })
   }
 }
-# 
-# #* Preliminary Visualizations ----
-# library(fields)
-# 
-# # load("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/1vsGroup/SCC_1vsG_35.RData")
-# 
-# plot(SCC_1vsG,
-#   # breaks=c(0,2),
-#   # col="turquoise",
-#   breaks = seq(from = 0, to = 2, length.out = 65),
-#   xlab = "Longitudinal (1-95)",
-#   ylab = "Transversal (1-79)",
-#   sub = "Difference between estimated mean functions: CNs - ADs",
-#   col.sub = "red",
-#   family = "serif"
-# )
-# 
-# # SECOND WAY: JUST ONE COLOR AND THEN WE OVERLAY A SERIES OF POINTS
-# # RUN THIS NEXT PLOT CODE, STOP IN ONE OF THE ESTIMATED MEAN FUNCTIONS, THEN RUN "POINTS" TO OVERLAY THEM
-# 
-# plot(SCC_1vsG,
-#   breaks = c(0, 2),
-#   col = "turquoise",
-#   # breaks=seq(from=0,to=2,length.out = 65),
-#   xlab = "Longitudinal (1-95)",
-#   ylab = "Transversal (1-79)",
-#   sub = "Difference between estimated mean functions: CNs - ADs",
-#   col.sub = "red",
-#   family = "serif"
-# )
-# 
-# points_1 <- getPoints(SCC_1vsG) # Returns coordinates of points above or below estimated mean function (points.P,points.N; in that order)
-# 
-# points(points_1[[1]],
-#   type = "p",
-#   pch = 15,
-#   col = "navy"
-# )
-# 
-# points(points_1[[2]],
-#   type = "p",
-#   pch = 15,
-#   col = "yellow"
-# )
-
 
 #* Parameter Evaluation ----
 
