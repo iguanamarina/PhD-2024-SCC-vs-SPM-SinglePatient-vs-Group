@@ -48,3 +48,6 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 database.Rda
+.RDataTmp2
+.RDataTmp2
+.RDataTmp2
