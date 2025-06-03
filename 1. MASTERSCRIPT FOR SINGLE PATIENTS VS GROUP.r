@@ -813,7 +813,6 @@ library(ggplot2)
 library(patchwork)
 library(grid)
 
-# Heatmap for Sensitivity (1vsGroup)
 heatmap_sens_facet <- ggplot(SCC_vs_SPM, aes(x = factor(roi), y = region, fill = sensMEAN)) +
   geom_tile(color = "white") +
   facet_wrap(~method) +
@@ -830,13 +829,18 @@ heatmap_sens_facet <- ggplot(SCC_vs_SPM, aes(x = factor(roi), y = region, fill =
   ) +
   theme_minimal(base_family = "serif") +
   theme(
-    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(size = 13),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    strip.text = element_text(size = 15),
+    plot.title = element_text(size = 18, hjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
     legend.key.width = unit(2, "cm")
   )
 
-# Heatmap for Specificity (1vsGroup)
+# Heatmap for Sensitivity (1vsGroup)
 heatmap_spec_facet <- ggplot(SCC_vs_SPM, aes(x = factor(roi), y = region, fill = espMEAN)) +
   geom_tile(color = "white") +
   facet_wrap(~method) +
@@ -848,22 +852,32 @@ heatmap_spec_facet <- ggplot(SCC_vs_SPM, aes(x = factor(roi), y = region, fill =
   ) +
   labs(
     x = "Hypoactivity Level (%)",
-    y = NULL,
+    y = "",
     title = "Mean Specificity by Method"
   ) +
   theme_minimal(base_family = "serif") +
   theme(
-    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(size = 13),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    strip.text = element_text(size = 15),
+    plot.title = element_text(size = 18, hjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
-    legend.key.width = unit(2, "cm"),
-    axis.title.y = element_blank()
+    legend.key.width = unit(2, "cm")
   )
 
-# Combine both with shared legend
+# Combine both with shared legend and larger axis titles
 combined_heatmap_sens_esp_1vsGroup <- heatmap_sens_facet + heatmap_spec_facet +
   plot_layout(guides = "collect") &
-  theme(legend.position = "bottom")
+  theme(
+    legend.position = "bottom",
+    
+    # ---- FINE-TUNE X AND Y AXIS TITLES FOR BOTH PANELS ----
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 # Show combined plot
 combined_heatmap_sens_esp_1vsGroup
@@ -892,7 +906,12 @@ heatmap_ppv_facet <- ggplot(SCC_vs_SPM, aes(x = factor(roi), y = region, fill = 
   ) +
   theme_minimal(base_family = "serif") +
   theme(
-    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(size = 13),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    strip.text = element_text(size = 15),
+    plot.title = element_text(size = 18, hjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
     legend.key.width = unit(2, "cm")
@@ -910,22 +929,30 @@ heatmap_npv_facet <- ggplot(SCC_vs_SPM, aes(x = factor(roi), y = region, fill = 
   ) +
   labs(
     x = "Hypoactivity Level (%)",
-    y = NULL,
+    y = "",
     title = "Mean NPV by Method"
   ) +
   theme_minimal(base_family = "serif") +
   theme(
-    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(size = 13),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    strip.text = element_text(size = 15),
+    plot.title = element_text(size = 18, hjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
-    legend.key.width = unit(2, "cm"),
-    axis.title.y = element_blank()
+    legend.key.width = unit(2, "cm")
   )
 
-# Combine both with shared guide
+# Combine both with shared legend and matched layout
 combined_heatmap_ppv_npv_1vsGroup <- heatmap_ppv_facet + heatmap_npv_facet +
   plot_layout(guides = "collect") &
-  theme(legend.position = "bottom")
+  theme(
+    legend.position = "bottom",
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 # Show plot
 combined_heatmap_ppv_npv_1vsGroup
