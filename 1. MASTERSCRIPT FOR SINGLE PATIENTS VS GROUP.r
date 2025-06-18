@@ -483,15 +483,170 @@ rm(tempSCC, tempSPM, fileSCC, fileSPM, resultFolder,
    outputFileComplete, outputFileSummary, SCC_vs_SPM_complete, SCC_vs_SPM)
 
 ### ==================================================== ###
-### 7B) STATISTICAL SIGNIFICANCE TESTS (Paired T-Tests) ###
+### 7B) STATISTICAL SIGNIFICANCE TESTS with testCompareR ###
 ### ==================================================== ###
 
+# NOTE for future users:
+# This section uses compareR() to assess statistical significance in a 1vsGroup setting.
+# It compares SCC vs SPM for Sensitivity, Specificity, PPV, and NPV.
+# File structures:
+#   SCC: Results/z35/1vsGroup/SCC/SCC_C{n}_{region}_{roi}.RData
+#   SPM: Results/z35/1vsGroup/SPM/binary_swwwC{n}_{region}_{roi}.nii
+
+library(testCompareR)
 library(dplyr)
-library(tidyr)
 library(readr)
 
-#* Helper to assign stars
-get_stars <- function(p) {
+# Load custom triplet builder
+source("~/GitHub/PhD-2023-SCC-vs-SPM-Group-vs-Group/Contrastes de Hipótesis/generateCompareRTriplets.R")
+
+# Define paths
+base_path <- "Results/z35/1vsGroup"
+scc_dir <- file.path(base_path, "SCC")
+spm_dir <- file.path(base_path, "SPM")
+mask_path <- "Auxiliary Files/new_mask.nii"
+
+# Load grid
+dims <- neuroSCC::getDimensions(mask_path)
+grid <- expand.grid(y = 1:dims$yDim, x = 1:dims$xDim)[, c("x", "y")]
+
+# Regions and ROIs (filtered)
+regions <- c("w32", "w214", "w271", "roiAD")  # order matters
+rois <- c(1, 4, 8)
+
+# Get list of subject IDs from SCC filenames
+scc_files <- list.files(scc_dir, pattern = "^SCC_C\\d+_.*\\.RData$", full.names = TRUE)
+subjects <- sort(unique(as.numeric(sub(".*SCC_C(\\d+)_.*", "\\1", scc_files))))
+
+# Storage
+pvalResults <- list()
+
+# Loop region × roi
+for (region in regions) {
+  for (roi in rois) {
+    
+    message("[INFO] Region ", region, " | ROI ", roi)
+    tripletList <- list()
+    
+    for (subject in subjects) {
+      subj_str <- paste0("C", subject)
+      
+      # Paths
+      scc_file <- file.path(scc_dir, paste0("SCC_", subj_str, "_", region, "_", roi, ".RData"))
+      spm_file <- file.path(spm_dir, paste0("binary_swww", subj_str, "_", region, "_", roi, ".nii"))
+      
+      if (!file.exists(scc_file) || !file.exists(spm_file)) {
+        warning("[WARNING] Missing files for subject ", subj_str, " | region ", region, " | ROI ", roi)
+        next
+      }
+      
+      env <- new.env()
+      load(scc_file, envir = env)
+      scc_obj <- env$SCC_1vsG
+      scc_points <- neuroSCC::getPoints(scc_obj)$positivePoints
+      spm_points <- neuroSCC::getSPMbinary(spm_file, paramZ = paramZ)
+      
+      # ROI mask
+      roi_region <- ifelse(region == "roiAD", "wroiAD", region)
+      roi_file <- file.path("roisNormalizadas", paste0("wwwx", roi_region, "_redim_crop_squ_flipLR_newDim_", subj_str, ".nii"))
+      if (!file.exists(roi_file)) {
+        warning("[WARNING] Missing ROI file for subject ", subj_str)
+        next
+      }
+      
+      true_points <- neuroSCC::processROIs(roi_file, region, subj_str, save = FALSE, verbose = FALSE)
+      true_slice <- subset(true_points, z == paramZ & pet == 1, select = c("x", "y"))
+      if (nrow(true_slice) == 0) next
+      
+      triplet <- generateCompareRTriplets(
+        grid = grid,
+        sccCoords = scc_points,
+        spmCoords = spm_points,
+        roiCoords = true_slice
+      )
+      tripletList[[length(tripletList) + 1]] <- triplet
+    }
+    
+    if (length(tripletList) == 0) {
+      warning("[WARNING] No valid subjects for ", region, " ROI ", roi)
+      next
+    }
+    
+    allTriplets <- bind_rows(tripletList) %>%
+      mutate(across(everything(), as.numeric))
+    
+    # Run test
+    result <- compareR(
+      df = allTriplets,
+      test1 = "SCC_pred",
+      test2 = "SPM_pred",
+      gold = "ROI_truth",
+      interpret = FALSE,
+      multi_corr = "holm",
+      alpha = 0.05,
+      sesp = TRUE,
+      ppvnpv = TRUE,
+      plrnlr = TRUE,
+      test.names = c("SCC", "SPM"),
+      dp = 2
+    )
+    
+    # Extract
+    row <- tibble(
+      region = region,
+      roi = roi,
+      sens_SCC = result$acc$accuracies$SCC["Sensitivity", "Estimate"],
+      se_sens_SCC = result$acc$accuracies$SCC["Sensitivity", "SE"],
+      sens_SPM = result$acc$accuracies$SPM["Sensitivity", "Estimate"],
+      se_sens_SPM = result$acc$accuracies$SPM["Sensitivity", "SE"],
+      p_sens = result$acc$sens.p.adj,
+      
+      spec_SCC = result$acc$accuracies$SCC["Specificity", "Estimate"],
+      se_spec_SCC = result$acc$accuracies$SCC["Specificity", "SE"],
+      spec_SPM = result$acc$accuracies$SPM["Specificity", "Estimate"],
+      se_spec_SPM = result$acc$accuracies$SPM["Specificity", "SE"],
+      p_spec = result$acc$spec.p.adj,
+      
+      ppv_SCC = result$pv$predictive.values$SCC["PPV", "Estimate"],
+      se_ppv_SCC = result$pv$predictive.values$SCC["PPV", "SE"],
+      ppv_SPM = result$pv$predictive.values$SPM["PPV", "Estimate"],
+      se_ppv_SPM = result$pv$predictive.values$SPM["PPV", "SE"],
+      p_ppv = result$pv$ppv.p.adj,
+      
+      npv_SCC = result$pv$predictive.values$SCC["NPV", "Estimate"],
+      se_npv_SCC = result$pv$predictive.values$SCC["NPV", "SE"],
+      npv_SPM = result$pv$predictive.values$SPM["NPV", "Estimate"],
+      se_npv_SPM = result$pv$predictive.values$SPM["NPV", "SE"],
+      p_npv = result$pv$npv.p.adj,
+      
+      lrpos_SCC = result$lr$likelihood.ratios$SCC["PLR", "Estimate"],
+      se_lrpos_SCC = result$lr$likelihood.ratios$SCC["PLR", "SE"],
+      lrpos_SPM = result$lr$likelihood.ratios$SPM["PLR", "Estimate"],
+      se_lrpos_SPM = result$lr$likelihood.ratios$SPM["PLR", "SE"],
+      p_lrpos = result$lr$plr.p.adj,
+      
+      lrneg_SCC = result$lr$likelihood.ratios$SCC["NLR", "Estimate"],
+      se_lrneg_SCC = result$lr$likelihood.ratios$SCC["NLR", "SE"],
+      lrneg_SPM = result$lr$likelihood.ratios$SPM["NLR", "Estimate"],
+      se_lrneg_SPM = result$lr$likelihood.ratios$SPM["NLR", "SE"],
+      p_lrneg = result$lr$nlr.p.adj
+    )
+    
+    pvalResults[[length(pvalResults) + 1]] <- row
+  }
+}
+
+# Output
+pvalTable_1vsGroup <- bind_rows(pvalResults)
+
+# Mapear orden correcto de regiones
+region_order <- c("w32", "w214", "w271", "roiAD")
+pvalTable_1vsGroup <- pvalTable_1vsGroup %>%
+  filter(region %in% region_order, roi %in% c(1, 4, 8)) %>%
+  mutate(region = factor(region, levels = region_order))
+
+# Significance stars
+getStars <- function(p) {
   if (is.na(p)) return("")
   if (p <= 0.001) return("***")
   if (p <= 0.01)  return("**")
@@ -499,62 +654,32 @@ get_stars <- function(p) {
   return("")
 }
 
-#* Ensure tibble structure
-SCC_vs_SPM_complete <- as_tibble(SCC_vs_SPM_complete)
+pvalTable_1vsGroup <- pvalTable_1vsGroup %>%
+  mutate(
+    sig_sens = sapply(p_sens, getStars),
+    sig_spec = sapply(p_spec, getStars),
+    sig_ppv  = sapply(p_ppv, getStars),
+    sig_npv  = sapply(p_npv, getStars),
+    sig_lrpos = sapply(p_lrpos, getStars),
+    sig_lrneg = sapply(p_lrneg, getStars)
+  )
 
-#* Initialize empty list
-pvalue_table <- list()
+# Reorder columns for output
+pvalTable_1vsGroup <- pvalTable_1vsGroup %>%
+  dplyr::select(
+    region, roi,
+    sens_SCC, se_sens_SCC, sens_SPM, se_sens_SPM, p_sens, sig_sens,
+    spec_SCC, se_spec_SCC, spec_SPM, se_spec_SPM, p_spec, sig_spec,
+    ppv_SCC, se_ppv_SCC, ppv_SPM, se_ppv_SPM, p_ppv, sig_ppv,
+    npv_SCC, se_npv_SCC, npv_SPM, se_npv_SPM, p_npv, sig_npv,
+    lrpos_SCC, se_lrpos_SCC, lrpos_SPM, se_lrpos_SPM, p_lrpos, sig_lrpos,
+    lrneg_SCC, se_lrneg_SCC, lrneg_SPM, se_lrneg_SPM, p_lrneg, sig_lrneg
+  )
 
-#* Loop through region × roi
-for (reg in levels(SCC_vs_SPM_complete$region)) {
-  for (r in levels(SCC_vs_SPM_complete$roi)) {
-    
-    subset_data <- SCC_vs_SPM_complete %>%
-      filter(region == reg, roi == r)
-    
-    # Skip if either method is missing
-    if (!all(c("SCC", "SPM") %in% unique(subset_data$method))) next
-    
-    # Convert to wide format
-    wide_data <- subset_data %>%
-      dplyr::select(method, subject, sensitivity, specificity, PPV, NPV) %>%
-      pivot_wider(names_from = method, values_from = c(sensitivity, specificity, PPV, NPV)) %>%
-      drop_na()
-    
-    # Paired t-tests
-    t_sens <- t.test(wide_data$sensitivity_SCC, wide_data$sensitivity_SPM, paired = TRUE)
-    t_esp  <- t.test(wide_data$specificity_SCC, wide_data$specificity_SPM, paired = TRUE)
-    t_ppv  <- t.test(wide_data$PPV_SCC, wide_data$PPV_SPM, paired = TRUE)
-    t_npv  <- t.test(wide_data$NPV_SCC, wide_data$NPV_SPM, paired = TRUE)
-    
-    # Store results
-    pvalue_table[[paste(reg, r, sep = "_")]] <- tibble(
-      region = reg,
-      roi = r,
-      p_sens = t_sens$p.value,
-      sig_sens = get_stars(t_sens$p.value),
-      p_esp  = t_esp$p.value,
-      sig_esp  = get_stars(t_esp$p.value),
-      p_ppv  = t_ppv$p.value,
-      sig_ppv = get_stars(t_ppv$p.value),
-      p_npv  = t_npv$p.value,
-      sig_npv = get_stars(t_npv$p.value)
-    )
-  }
-}
-
-#* Combine into single tibble
-pvalue_table_1vsGroup <- bind_rows(pvalue_table)
-
-#* Save outputs
-write_csv(pvalue_table_1vsGroup, "Results/z35/results/pvalue_table_1vsGroup.csv")
-saveRDS(pvalue_table_1vsGroup, "Results/z35/results/pvalue_table_1vsGroup.RDS")
-
-#* Print preview
-print(pvalue_table_1vsGroup)
-
-#* Clean up environment
-rm(get_stars, wide_data, subset_data, t_sens, t_esp, t_ppv, t_npv)
+# Save
+write_csv(pvalTable_1vsGroup, file = file.path(base_path, "pvalue_table_compareR.csv"))
+saveRDS(pvalTable_1vsGroup, file = file.path(base_path, "pvalue_table_compareR.RDS"))
+# pvalue_table_compareR <- readRDS("~/GitHub/PhD-2024-SCC-vs-SPM-SinglePatient-vs-Group/Results/z35/1vsGroup/pvalue_table_compareR.RDS")
 
 
 ### ==================================================== ###
